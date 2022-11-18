@@ -129,7 +129,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	const float correction = 0.8;
+	const bool field_centric = true;
 	// autonomous();
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::Motor left_up(9);
@@ -139,7 +139,7 @@ void opcontrol() {
 	pros::Motor intake(8);
 	pros::Motor spinner_conveyor(7);
 	pros::Motor spinner1(5);
-	pros::Motor spinner2(11);
+	pros::Motor roller(3);
 	pros::Imu gyro(1);
 	spinner1.set_gearing(pros::E_MOTOR_GEARSET_36);
 	intake.set_gearing(pros::E_MOTOR_GEARSET_36);
@@ -152,13 +152,14 @@ void opcontrol() {
 		int axisThree = master.get_analog(ANALOG_LEFT_Y); // Y
 		int axisFour = master.get_analog(ANALOG_LEFT_X); // X
 		int axisOne = master.get_analog(ANALOG_RIGHT_X); // turn
-
-		float theta = gyro.get_heading() * 3.14159 / 180;
-		float theta1 = atan2(axisThree, axisFour);
-		theta += theta1;
-		int r = sqrt(axisThree * axisThree + axisFour * axisFour);
-		axisThree = r * sin(theta);
-		axisFour = r * cos(theta);
+  	if (field_centric) {
+			float theta = gyro.get_heading() * 3.14159 / 180;
+			float theta1 = atan2(axisThree, axisFour);
+			theta += theta1;
+			int r = sqrt(axisThree * axisThree + axisFour * axisFour);
+			axisThree = r * sin(theta);
+			axisFour = r * cos(theta);            
+		}
 		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
 		{
 			intake.move_velocity(100);
@@ -173,8 +174,6 @@ void opcontrol() {
 		}
 		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
 			spinner_conveyor.move_velocity(80);
-		} else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-			spinner_conveyor.move_velocity(-80);
 		}
 		else {
 			spinner_conveyor.move_velocity(0);
@@ -182,12 +181,18 @@ void opcontrol() {
 
 		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
 			if (spinning) {
-				spinner1.move_voltage(12000);
+				spinner1.move_voltage(-12000);
 			}
 			else {
 				spinner1.move_voltage(0);
 			}
 			spinning = !spinning;
+		}
+
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+			roller.move_velocity(100);
+		} else {
+			roller.move_velocity(0);
 		}
 		right_up = axisOne - axisThree + axisFour;
 		right_down = axisOne - axisThree - axisFour;
