@@ -3,6 +3,7 @@
 #include "pros/adi.hpp"
 #include "pros/misc.h"
 #include "pros/misc.hpp"
+#include "pros/motors.hpp"
 #include "pros/rtos.hpp"
 #include "sylib/motor.hpp"
 #include "sylib/system.hpp"
@@ -11,21 +12,14 @@
 #define INTAKE_PORT 7
 #define FLYWHEEL_PORT 4
 #define FLYWHEEL_GEARING 3600
-#define INDEXER_PORT 2
-#define FLYWHEEL_PORT 4
+#define CATA_PORTS 1,2
 
 
 pros::ADIDigitalOut piston('A');
 pros::Motor intake(INTAKE_PORT);
-pros::Motor indexer(INDEXER_PORT);
+pros::MotorGroup cata({CATA_PORTS});
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
-
-sylib::SpeedControllerInfo
-    flywheel_controller([](double rpm) { return M_E / std::log(rpm + M_E); },
-                        1000000, 2500, 500, 0, false, 0
-
-    );
 
 
 // Chassis constructor
@@ -38,7 +32,7 @@ Drive chassis (
   //   the first port is the sensored port (when trackers are not used!)
   ,{-9, -10}
 
-  // IMU Port
+  // IMU Port (this is the inertial sensor)
   ,20
 
   // Wheel Diameter (Remember, 4" wheels are actually 4.125!)
@@ -121,58 +115,8 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-    sylib::initialize();
-    sylib::Motor flywheel(FLYWHEEL_PORT, FLYWHEEL_GEARING, true,
-                          flywheel_controller);
-    flywheel.set_velocity_custom_controller(2200);
-  chassis.reset_pid_targets(); // Resets PID targets to 0
-  chassis.reset_gyro(); // Reset gyro position to 0
-  chassis.reset_drive_sensor(); // Reset drive sensors to 0
-  chassis.set_drive_brake(MOTOR_BRAKE_HOLD); // Set motors to hold.  This helps autonomous consistency.
+  roller1();
 
-  chassis.set_drive_pid(2, 127 / 3, true);
-  chassis.wait_drive();
-
-  intake.move(127);
-  pros::delay(400);
-  intake.move(0);
-
-  chassis.set_drive_pid(-22, 127 / 3, true, true);
-  chassis.wait_drive();
-
-  chassis.set_turn_pid(90, 127 / 2);
-  chassis.wait_drive();
-
-   chassis.set_drive_pid(24, 127 / 3, true, true);
-   chassis.wait_drive();
-
-  intake.move(127);
-  pros::delay(400);
-  intake.move(0);
-
-  chassis.set_drive_pid(-24 * 3.7, 127, true, true);
-  chassis.wait_drive();
-
-  chassis.set_turn_pid(90 + 12, 127 / 2);
-  chassis.wait_drive();
-
-  indexer.move(-127/2);
-  pros::delay(4000);
-  indexer.move(0);
-
-   chassis.set_turn_pid(90, 127 / 2);
-   chassis.wait_drive();
-
-   chassis.set_drive_pid(24 * 2.8, 127, true, true);
-   chassis.wait_drive();
-
-   chassis.set_turn_pid(45, 127 / 2);
-   chassis.wait_drive();
-
-   pros::delay(10000);
-   piston.set_value(true);
-
-   pros::delay(5000);
 }
 
 
@@ -191,15 +135,8 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-  sylib::initialize();
-  sylib::Motor flywheel(FLYWHEEL_PORT, FLYWHEEL_GEARING, true,
-                      flywheel_controller);
-
-pros::Motor flywheel_encoder(FLYWHEEL_PORT);
-
   // This is preference to what you like to drive on.
   chassis.set_drive_brake(MOTOR_BRAKE_COAST);
-  flywheel.set_velocity_custom_controller(2400);
   while (true) {
 
     chassis.arcade_standard(ez::SPLIT); // Standard split arcade
@@ -212,11 +149,11 @@ pros::Motor flywheel_encoder(FLYWHEEL_PORT);
     }
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
-      indexer.move(-127);
+      cata.move(-127);
     } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-      indexer.move(127);
+      cata.move(127);
     } else {
-      indexer.move(0);
+      cata.move(0);
     }
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {

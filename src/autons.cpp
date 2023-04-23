@@ -1,4 +1,6 @@
 #include "main.h"
+#include "pros/motors.hpp"
+#include "pros/rtos.hpp"
 
 
 /////
@@ -243,20 +245,23 @@ void interfered_example() {
  chassis.wait_drive();
 }
 
-// void prog_skills() {
-//   pros::ADIDigitalOut piston('A');
-//   pros::Motor intake(INTAKE_PORT);
-//   pros::Motor indexer(INDEXER_PORT);
-//   sylib::SpeedControllerInfo
-//       flywheel_controller([](double rpm) { return M_E / std::log(rpm + M_E); },
-//                           1000000, 2500, 500, 0, false, 0
+void roller1() {
+ pros::Motor intake(3);
+ // assumes that your intake and roller is powered by one motor (it should be)
+ // gets the roller that the robot is right behind
+ pros::MotorGroup cata({1, -2});
+ // 1 and -2 are the catapult motor ports. MAKE SURE THEY SPIN IN THE SAME
+ // DIRECTION! you can reverse a motor by making it negative
+ chassis.set_drive_pid(-2, 60); // moves back 2 inches
 
-//       );
-//   sylib::Motor flywheel(FLYWHEEL_PORT, FLYWHEEL_GEARING, true,
-//                         flywheel_controller);
-//   pros::Motor flywheel_encoder(FLYWHEEL_PORT);
+ intake.move(-60); // rolls the roller at 1/2 voltage for 3 seconds
+ pros::delay(3000); // (you might need to change the time you roll it for. 3000 = 3000ms = 3 seconds)
+ intake.move(0);
 
-//   }
+ chassis.set_drive_pid(4, 60); // move forward
+ 
+
+}
 
 // . . .
 // Make your own autonomous functions here!

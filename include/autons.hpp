@@ -11,6 +11,7 @@ void wait_until_change_speed();
 void swing_example();
 void combining_movements();
 void interfered_example();
+void roller1();
 
 void default_constants();
 void one_mogo_constants();
