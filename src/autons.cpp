@@ -243,7 +243,20 @@ void interfered_example() {
  chassis.wait_drive();
 }
 
+// void prog_skills() {
+//   pros::ADIDigitalOut piston('A');
+//   pros::Motor intake(INTAKE_PORT);
+//   pros::Motor indexer(INDEXER_PORT);
+//   sylib::SpeedControllerInfo
+//       flywheel_controller([](double rpm) { return M_E / std::log(rpm + M_E); },
+//                           1000000, 2500, 500, 0, false, 0
 
+//       );
+//   sylib::Motor flywheel(FLYWHEEL_PORT, FLYWHEEL_GEARING, true,
+//                         flywheel_controller);
+//   pros::Motor flywheel_encoder(FLYWHEEL_PORT);
+
+//   }
 
 // . . .
 // Make your own autonomous functions here!
