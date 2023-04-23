@@ -253,14 +253,14 @@ void roller1() {
  // 1 and -2 are the catapult motor ports. MAKE SURE THEY SPIN IN THE SAME
  // DIRECTION! you can reverse a motor by making it negative
  chassis.set_drive_pid(-2, 60); // moves back 2 inches
+ chassis.wait_drive();
 
  intake.move(-60); // rolls the roller at 1/2 voltage for 3 seconds
  pros::delay(3000); // (you might need to change the time you roll it for. 3000 = 3000ms = 3 seconds)
  intake.move(0);
 
  chassis.set_drive_pid(4, 60); // move forward
- 
-
+chassis.wait_drive();
 }
 
 // . . .
